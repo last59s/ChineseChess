@@ -125,11 +125,13 @@ impl EventHandler for Game {
     ) {
         let x = (_x + 30.) as i32 / 60;
         let y = (_y + 30.) as i32 / 60;
+        println!("x:{}\ty:{}",x,y);
+        if x >0&&x<10&&y>0&&y<11{
+            self.m.x = x as f32 * 60.;
+            self.m.y = y as f32 * 60.;
+        }
 
-        self.m.x = x as f32 * 60.;
-        self.m.y = y as f32 * 60.;
-
-        println!("x:{}\ty:{}", self.m.x, self.m.y);
+        // println!("x:{}\ty:{}", self.m.x, self.m.y);
         self.find_red_piece();
         self.find_black_piece();
     }
