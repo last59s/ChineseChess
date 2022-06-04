@@ -5,8 +5,10 @@ use glam::Vec2;
 use std::collections::HashMap;
 
 // #[derive(Debug)]
+// #[derive(Clone)]
 struct Piece {
-    id: u8,
+    // id: u8,
+    // selected: bool,
     // x: f32,
     // y: f32,
     img: Image,
@@ -16,11 +18,13 @@ struct Piece {
 // #[derive(Debug)]
 pub struct Game {
     board: Image,
+    at: Image, // 选中框
     red: HashMap<u8, Piece>,
     black: HashMap<u8, Piece>,
-    at: Image,
-    m: Vec2,
-    player: u8,
+    m: Vec2,     // 鼠标绝对坐标
+    select: u8,  //(id，颜色)
+    state: bool, // 状态
+    player: u8,  // 玩家(0 & 1)
 }
 impl Game {
     pub fn new(ctx: &mut Context) -> GameResult<Game> {
@@ -28,11 +32,13 @@ impl Game {
         let at = Image::new(ctx, "/at.png")?;
         let mut game = Game {
             board,
+            at,
             red: HashMap::new(),
             black: HashMap::new(),
-            at,                       // 选中框
-            m: Vec2::new(-60., -60.), // 鼠标绝对坐标
-            player: 0,                // 玩家(0 & 1)
+            select: 0,
+            state: false,
+            m: Vec2::new(-60., -60.),
+            player: 0,
         };
         game.read_img('r', ctx);
         game.read_img('b', ctx);
@@ -53,7 +59,8 @@ impl Game {
             let path = format!("/{}{}.png", c, id + 10);
             let img = Image::new(ctx, path).expect("No file!");
             let piece = Piece {
-                id,
+                // id,
+                // selected: false,
                 // x: x[id as usize],
                 // y: y[id as usize],
                 img,
@@ -68,29 +75,63 @@ impl Game {
             }
         }
     }
-    // 返回红棋id
-    fn find_red_piece(&self) -> Option<u8> {
-        for (id, p) in self.red.iter() {
+    // 返回棋子ip，并设置状态ture
+    fn piece_select(&mut self, color: char) -> bool {
+        let p;
+        if color == 'r' {
+            p = self.red.iter();
+        } else {
+            p = self.black.iter();
+        }
+        for (id, p) in p {
             if p.vec.x + 24. == self.m.x && p.vec.y + 24. == self.m.y {
-                println!("red:{}", p.id);
-                return Some(*id);
+                self.select = *id;
+                self.state = true;
+                println!("{}:{}", color, self.select);
+                return true;
             }
         }
-        None
+        false
     }
-    // 返回黑棋id
-    fn find_black_piece(&self) -> Option<u8> {
-        for (id, p) in self.black.iter() {
+    // 移动棋子，并设置状态为false
+    fn piece_move(&mut self, color: char) -> Option<()> {
+        // 吃掉对方棋子
+        let i = self.select;
+        let p;
+        if color == 'r' {
+            self.piece_find_and_delect('b');
+            p = self.red.get_mut(&i)?;
+        } else {
+            self.piece_find_and_delect('r');
+            p = self.black.get_mut(&i)?;
+        }
+        // 更新坐标
+        let vec = Vec2::new(self.m.x - 24., self.m.y - 24.);
+        p.vec = vec;
+        // 恢复状态
+        self.state = false;
+        self.player += 1;
+        Some(())
+    }
+    fn piece_find_and_delect(&mut self, color: char) {
+        let p;
+        if color == 'r' {
+            p = self.red.iter_mut();
+        } else {
+            p = self.black.iter_mut();
+        }
+        for (_, p) in p {
             if p.vec.x + 24. == self.m.x && p.vec.y + 24. == self.m.y {
-                println!("black:{}", p.id);
-                return Some(*id);
+                p.vec = Vec2::new(-60., -60.);
             }
         }
-        None
     }
 }
 impl EventHandler for Game {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
+        // if  {
+        // 帅将x坐标<0,游戏结束
+        // }
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
@@ -105,7 +146,7 @@ impl EventHandler for Game {
             graphics::draw(ctx, &r[&id].img, (r[&id].vec, 0.0, Color::WHITE))?;
             graphics::draw(ctx, &b[&id].img, (b[&id].vec, 0.0, Color::WHITE))?;
         }
-        // 绘制选中光标at
+        // 绘制选定框at
         graphics::draw(
             ctx,
             &self.at,
@@ -125,32 +166,30 @@ impl EventHandler for Game {
     ) {
         let x = (_x + 30.) as i32 / 60;
         let y = (_y + 30.) as i32 / 60;
-        println!("x:{}\ty:{}",x,y);
-        if x >0&&x<10&&y>0&&y<11{
+        // 防止选定框出界
+        if x > 0 && x < 10 && y > 0 && y < 11 {
             self.m.x = x as f32 * 60.;
             self.m.y = y as f32 * 60.;
         }
-
-        // println!("x:{}\ty:{}", self.m.x, self.m.y);
-        self.find_red_piece();
-        self.find_black_piece();
+        // 棋子移动
+        match self.player % 2 {
+            0 => {
+                if !self.state {
+                    self.piece_select('r');
+                } else {
+                    self.piece_move('r');
+                }
+                println!("{}", self.player);
+            }
+            1 => {
+                if !self.state {
+                    self.piece_select('b');
+                } else {
+                    self.piece_move('b');
+                }
+                println!("{}", self.player);
+            }
+            _ => panic!("Player error!"),
+        }
     }
-    // 鼠标按钮已释放
-    // fn mouse_button_up_event(
-    //     &mut self,
-    //     _ctx: &mut Context,
-    //     _button: ggez::event::MouseButton,
-    //     _x: f32,
-    //     _y: f32,
-    // ) {
-    //     // println!("x:{}\ty:{}", _x, _y);
-    // }
-    // 鼠标进入或左窗口区域
-    // fn mouse_enter_or_leave(&mut self, _ctx: &mut Context, _entered: bool) {}
-    // 移动鼠标；它在窗口中同时提供了绝对X和Y坐标，并且相对X和Y坐标与其最后一个位置相比。
-    // fn mouse_motion_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32, _dx: f32, _dy: f32) {}
-    // 将鼠标轮滚动，垂直滚动（y，远离用户和负面）或水平（x，右侧为阳性，右侧为正，左侧为负）。
-    // fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32) {
-
-    // }
 }
