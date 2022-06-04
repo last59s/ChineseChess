@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 // #[derive(Debug)]
 struct Piece {
-    // id: u16,
+    id: u8,
     // x: f32,
     // y: f32,
     img: Image,
@@ -16,8 +16,8 @@ struct Piece {
 // #[derive(Debug)]
 pub struct Game {
     board: Image,
-    red: HashMap<u16, Piece>,
-    black: HashMap<u16, Piece>,
+    red: HashMap<u8, Piece>,
+    black: HashMap<u8, Piece>,
     at: Image,
     m: Vec2,
     player: u8,
@@ -30,9 +30,9 @@ impl Game {
             board,
             red: HashMap::new(),
             black: HashMap::new(),
-            at,                   // 选中框
-            m: Vec2::new(0., 0.), // 鼠标绝对坐标
-            player: 0,            // 玩家(0 & 1)
+            at,                       // 选中框
+            m: Vec2::new(-60., -60.), // 鼠标绝对坐标
+            player: 0,                // 玩家(0 & 1)
         };
         game.read_img('r', ctx);
         game.read_img('b', ctx);
@@ -53,7 +53,7 @@ impl Game {
             let path = format!("/{}{}.png", c, id + 10);
             let img = Image::new(ctx, path).expect("No file!");
             let piece = Piece {
-                // id,
+                id,
                 // x: x[id as usize],
                 // y: y[id as usize],
                 img,
@@ -68,9 +68,26 @@ impl Game {
             }
         }
     }
-    // fn find_piece() {
-            
-    // }
+    // 返回红棋id
+    fn find_red_piece(&self) -> Option<u8> {
+        for (id, p) in self.red.iter() {
+            if p.vec.x + 24. == self.m.x && p.vec.y + 24. == self.m.y {
+                println!("red:{}", p.id);
+                return Some(*id);
+            }
+        }
+        None
+    }
+    // 返回黑棋id
+    fn find_black_piece(&self) -> Option<u8> {
+        for (id, p) in self.black.iter() {
+            if p.vec.x + 24. == self.m.x && p.vec.y + 24. == self.m.y {
+                println!("black:{}", p.id);
+                return Some(*id);
+            }
+        }
+        None
+    }
 }
 impl EventHandler for Game {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
@@ -112,7 +129,9 @@ impl EventHandler for Game {
         self.m.x = x as f32 * 60.;
         self.m.y = y as f32 * 60.;
 
-        println!("x:{}\ty:{}", x * 60, y * 60);
+        println!("x:{}\ty:{}", self.m.x, self.m.y);
+        self.find_red_piece();
+        self.find_black_piece();
     }
     // 鼠标按钮已释放
     // fn mouse_button_up_event(
