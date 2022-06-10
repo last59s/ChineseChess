@@ -1,7 +1,4 @@
-// use std::collections::HashMap;
-
 use crate::app::Game;
-// use super::_app;
 use glam::Vec2;
 
 static mut REC: [[char; 9]; 10] = [
@@ -36,7 +33,8 @@ impl Game {
     pub fn which_piece(&self, id: u8) -> Option<Vec<Vec2>> {
         let v = match id {
             0 => Some(self.shuai(id)),
-            1..=2=>Some(self.shi(id)),
+            1..=2 => Some(self.shi(id)),
+            3..=4=>Some(self.xiang(id)),
             11..=15 => Some(self.bing(id)),
             _ => None,
         };
@@ -82,35 +80,48 @@ impl Game {
         }
         self.is_friend(&mut v);
         v
-        // if self.select.1 == 'r' {
-        //     let p = self.red.get(&id).unwrap();
-        //     if p.loc.y < 330. {
-        //         v.push(Vec2::new(p.loc.x - 60., p.loc.y));
-        //         v.push(Vec2::new(p.loc.x + 60., p.loc.y));
-        //     }
-        //     v.push(Vec2::new(p.loc.x, p.loc.y - 60.));
-        // } else if self.select.1 == 'b' {
-        //     let p = self.black.get(&id).unwrap();
-        //     if p.loc.y > 330. {
-        //         v.push(Vec2::new(p.loc.x - 60., p.loc.y));
-        //         v.push(Vec2::new(p.loc.x + 60., p.loc.y));
-        //     }
-        //     v.push(Vec2::new(p.loc.x, p.loc.y + 60.));
-        // }
     }
     // pub fn pao(&self) {}
     // pub fn p_ju(&self) {}
     // pub fn p_ma(&self) {}
-    // pub fn p_xiang(&self) {}
-    pub fn shi(&self ,id:u8) ->Vec<Vec2>{
+    pub fn xiang(&self, id: u8)->Vec<Vec2> {
+        let mut v: Vec<Vec2> = Vec::new();
+        let mut rec = [[0, 2], [0, 6], [2, 0], [2, 4], [2, 8], [4, 2], [4, 6]];
+        let p = if self.select.1 == 'r' {
+            for i in rec.iter_mut() {
+                i[1] = 9 - i[1];
+            }
+            Some(self.red.get(&id).unwrap())
+        } else if self.select.1 == 'b' {
+            Some(self.black.get(&id).unwrap())
+        } else {
+            None
+        };
+        if let Some(p) = p {
+            let x = (p.loc.x / 60.) as usize;
+            let y = (p.loc.y / 60.) as usize;
+            unsafe {
+                for i in rec.iter() {
+                    if REC[(y + i[1]) / 2][(x + i[0]) / 2] == '+' {
+                        let _x=(i[0]as f32 +1.)*60.-24.;
+                        let _y=(i[1]as f32 +1.)*60.-24.;
+                        v.push(Vec2::new(_x,_y));
+                    }
+                }
+            }
+        }
+        self.is_friend(&mut v);
+        v
+    }
+    pub fn shi(&self, id: u8) -> Vec<Vec2> {
         let mut v: Vec<Vec2> = Vec::new();
         match self.select.1 {
             'r' => {
                 let p = self.red.get(&id).unwrap();
-                v.push(Vec2::new(p.loc.x + 60., p.loc.y+60.));
-                v.push(Vec2::new(p.loc.x+60., p.loc.y - 60.));
-                v.push(Vec2::new(p.loc.x-60., p.loc.y + 60.));
-                v.push(Vec2::new(p.loc.x - 60., p.loc.y-60.));
+                v.push(Vec2::new(p.loc.x + 60., p.loc.y + 60.));
+                v.push(Vec2::new(p.loc.x + 60., p.loc.y - 60.));
+                v.push(Vec2::new(p.loc.x - 60., p.loc.y + 60.));
+                v.push(Vec2::new(p.loc.x - 60., p.loc.y - 60.));
                 for loc in v.iter_mut() {
                     if loc.y + 24. < 480. || loc.y + 24. > 600. {
                         loc.x = -60.;
@@ -120,10 +131,10 @@ impl Game {
             }
             'b' => {
                 let p = self.black.get(&id).unwrap();
-                v.push(Vec2::new(p.loc.x + 60., p.loc.y+60.));
-                v.push(Vec2::new(p.loc.x+60., p.loc.y - 60.));
-                v.push(Vec2::new(p.loc.x-60., p.loc.y + 60.));
-                v.push(Vec2::new(p.loc.x - 60., p.loc.y-60.));
+                v.push(Vec2::new(p.loc.x + 60., p.loc.y + 60.));
+                v.push(Vec2::new(p.loc.x + 60., p.loc.y - 60.));
+                v.push(Vec2::new(p.loc.x - 60., p.loc.y + 60.));
+                v.push(Vec2::new(p.loc.x - 60., p.loc.y - 60.));
                 for loc in v.iter_mut() {
                     if loc.y + 24. < 60. || loc.y + 24. > 180. {
                         loc.x = -60.;
