@@ -1,4 +1,3 @@
-use crate::rule::update_rec;
 use ggez::event::EventHandler;
 use ggez::graphics::{self, Color, Image};
 use ggez::{Context, GameResult};
@@ -141,6 +140,8 @@ impl Game {
                 }
                 _ => return,
             }
+            self.state = false;
+            self.select = (None, '+');
         }
     }
     fn update_loc(&mut self, v: Option<Vec<Vec2>>, id: u8) -> bool {
@@ -155,7 +156,7 @@ impl Game {
                     if _v.x == self.m.x - 24. && _v.y == self.m.y - 24. {
                         // 被选中棋子更新
                         let loc = Vec2::new(self.m.x - 24., self.m.y - 24.);
-                        update_rec(p.color, &p.loc, &self.m);
+                        crate::rule::update_rec(p.color, &p.loc, &self.m);
                         p.loc = loc;
                         // 重置状态
                         self.state = false;
