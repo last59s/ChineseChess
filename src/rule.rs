@@ -34,7 +34,8 @@ impl Game {
         let v = match id {
             0 => Some(self.shuai(id)),
             1..=2 => Some(self.shi(id)),
-            3..=4=>Some(self.xiang(id)),
+            3..=4 => Some(self.xiang(id)),
+            5..=6 => Some(self.ma(id)),
             11..=15 => Some(self.bing(id)),
             _ => None,
         };
@@ -81,10 +82,55 @@ impl Game {
         self.is_friend(&mut v);
         v
     }
-    // pub fn pao(&self) {}
-    // pub fn p_ju(&self) {}
-    // pub fn p_ma(&self) {}
-    pub fn xiang(&self, id: u8)->Vec<Vec2> {
+    // pub fn pao(&self, id: u8) -> Vec<Vec2>  {
+    //     let mut v: Vec<Vec2> = Vec::new();
+
+    //     v
+    // }
+    // pub fn che(&self, id: u8)  -> Vec<Vec2> {
+    //     let mut v: Vec<Vec2> = Vec::new();
+
+    //     v
+    // }
+    pub fn ma(&self, id: u8) -> Vec<Vec2> {
+        let mut v: Vec<Vec2> = Vec::new();
+        unsafe {
+            let target = [
+                ([-1, 2], [1, 2]),
+                ([2, 1], [2, -1]),
+                ([-2, 1], [-2, -1]),
+                ([1, -2], [-1, -2]),    
+            ];
+            let obstacle = [[0, 1], [1, 0], [-1, 0], [0, -1]];  // 下，右，左，上
+            let p = if self.select.1 == 'r' {
+                Some(self.red.get(&id).unwrap())
+            } else if self.select.1 == 'b' {
+                Some(self.black.get(&id).unwrap())
+            } else {
+                None
+            };
+            if let Some(p) = p {
+                for i in 0..4 {
+                    let x = (p.loc.x / 60.) as i32 + obstacle[i][0];
+                    let y = (p.loc.y / 60.) as i32 + obstacle[i][1];
+                    if x < 0 || x > 8 || y < 0 || y > 9 {
+                        continue;
+                    }
+                    if REC[y as usize][x as usize] == '+' {
+                        let mut _x = p.loc.x + (target[i].0[0] as f32) * 60.;
+                        let mut _y = p.loc.y + (target[i].0[1] as f32) * 60.;
+                        v.push(Vec2::new(_x, _y));
+                        _x = p.loc.x + (target[i].1[0] as f32) * 60.;
+                        _y = p.loc.y + (target[i].1[1] as f32) * 60.;
+                        v.push(Vec2::new(_x, _y));
+                    }
+                }
+            }
+        }
+        self.is_friend(&mut v);
+        v
+    }
+    pub fn xiang(&self, id: u8) -> Vec<Vec2> {
         let mut v: Vec<Vec2> = Vec::new();
         let mut rec = [[0, 2], [0, 6], [2, 0], [2, 4], [2, 8], [4, 2], [4, 6]];
         let p = if self.select.1 == 'r' {
@@ -103,9 +149,9 @@ impl Game {
             unsafe {
                 for i in rec.iter() {
                     if REC[(y + i[1]) / 2][(x + i[0]) / 2] == '+' {
-                        let _x=(i[0]as f32 +1.)*60.-24.;
-                        let _y=(i[1]as f32 +1.)*60.-24.;
-                        v.push(Vec2::new(_x,_y));
+                        let _x = (i[0] as f32 + 1.) * 60. - 24.;
+                        let _y = (i[1] as f32 + 1.) * 60. - 24.;
+                        v.push(Vec2::new(_x, _y));
                     }
                 }
             }
