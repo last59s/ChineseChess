@@ -15,16 +15,12 @@ static mut REC: [[char; 9]; 10] = [
 ];
 pub fn update_rec(color: char, loc: &Vec2, m: &Vec2) {
     unsafe {
-        // println!("loc:\tx:{}\t,y:{}", loc.x, loc.y);
-        // println!("m:\tx:{}\t,y:{}", m.x, m.y);
         let mut x = loc.x / 60.;
         let mut y = loc.y / 60.;
         REC[y as usize][x as usize] = '+';
-        // println!("原：\tx:{}\ty:{}", x as usize, y as usize);
         x = m.x / 60. - 1.;
         y = m.y / 60. - 1.;
         REC[y as usize][x as usize] = color;
-        // println!("后：x:{}\ty:{}", x, y);
     }
 }
 
@@ -100,7 +96,7 @@ impl Game {
                 let x = (p.loc.x / 60.) as i32;
                 let y = (p.loc.y / 60.) as i32;
                 let mut _state = false;
-                for i in (0..x).rev() { // 左
+                for i in (0..x).rev() {
                     if REC[y as usize][i as usize] != '+' {
                         if REC[y as usize][i as usize] == c && _state == true {
                             v.push(Vec2::new(((i + 1) * 60 - 24) as f32, p.loc.y));
@@ -114,7 +110,7 @@ impl Game {
                     }
                 }
                 _state = false;
-                for i in x + 1..9 {     //右
+                for i in x + 1..9 {
                     if REC[y as usize][i as usize] != '+' {
                         if REC[y as usize][i as usize] == c && _state == true {
                             v.push(Vec2::new(((i + 1) * 60 - 24) as f32, p.loc.y));
@@ -128,23 +124,21 @@ impl Game {
                     }
                 }
                 _state = false;
-                for i in (0..y).rev() { // 上
+                for i in (0..y).rev() {
                     if REC[i as usize][x as usize] != '+' {
                         if REC[i as usize][x as usize] == c && _state == true {
                             v.push(Vec2::new(p.loc.x, ((i + 1) * 60 - 24) as f32));
-                            println!("3-vec1\tx:{}y:{}",p.loc,((i + 1) * 60 - 24) as f32);
                             _state = false;
                             break;
                         }
                         _state = true;
                     }
                     if _state == false {
-                        println!("3-vec2\tx:{}y:{}",p.loc,((i + 1) * 60 - 24) as f32);
                         v.push(Vec2::new(p.loc.x, ((i + 1) * 60 - 24) as f32));
                     }
                 }
                 _state = false;
-                for i in y + 1..10 {    // 下
+                for i in y + 1..10 {
                     if REC[i as usize][x as usize] != '+' {
                         if REC[i as usize][x as usize] == c && _state == true {
                             v.push(Vec2::new(p.loc.x, ((i + 1) * 60 - 24) as f32));
@@ -227,12 +221,10 @@ impl Game {
                 ([1, -2], [-1, -2]),
             ];
             let obstacle = [[0, 1], [1, 0], [-1, 0], [0, -1]]; // 下，右，左，上
-            let p = if self.select.1 == 'r' {
-                Some(self.red.get(&id).unwrap())
-            } else if self.select.1 == 'b' {
-                Some(self.black.get(&id).unwrap())
-            } else {
-                None
+            let p = match self.select.1 {
+                'r' => Some(self.red.get(&id).unwrap()),
+                'b' => Some(self.black.get(&id).unwrap()),
+                _ => None,
             };
             if let Some(p) = p {
                 for i in 0..4 {
@@ -257,16 +249,16 @@ impl Game {
     }
     pub fn xiang(&self, id: u8) -> Vec<Vec2> {
         let mut v: Vec<Vec2> = Vec::new();
-        let mut rec = [[0, 2], [0, 6], [2, 0], [2, 4], [2, 8], [4, 2], [4, 6]];
-        let p = if self.select.1 == 'r' {
-            for i in rec.iter_mut() {
-                i[1] = 9 - i[1];
+        let mut rec = [[0, 2], [2, 0], [2, 4], [4, 2], [6, 0], [6, 4], [8, 2]];
+        let p = match self.select.1 {
+            'r' => {
+                for i in rec.iter_mut() {
+                    i[1] = 9 - i[1];
+                }
+                Some(self.red.get(&id).unwrap())
             }
-            Some(self.red.get(&id).unwrap())
-        } else if self.select.1 == 'b' {
-            Some(self.black.get(&id).unwrap())
-        } else {
-            None
+            'b' => Some(self.black.get(&id).unwrap()),
+            _ => None,
         };
         if let Some(p) = p {
             let x = (p.loc.x / 60.) as usize;
@@ -282,6 +274,7 @@ impl Game {
             }
         }
         self.is_friend(&mut v);
+        println!("{:?}", v);
         v
     }
     pub fn shi(&self, id: u8) -> Vec<Vec2> {
