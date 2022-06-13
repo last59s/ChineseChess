@@ -1,5 +1,5 @@
-use ggez::event::EventHandler;
-use ggez::graphics::{self, Color, Image};
+use ggez::event::{EventHandler, KeyCode};
+use ggez::graphics::{self, Color, Font, Image, PxScale, Text, TextFragment};
 use ggez::{Context, GameResult};
 use glam::Vec2;
 use std::collections::HashMap;
@@ -81,13 +81,10 @@ impl Game {
                 if p.loc.x + 24. == self.m.x && p.loc.y + 24. == self.m.y {
                     self.state = true;
                     self.select = (Some(*id), p.color);
-                    // println!("find id={}",id);
                     return true;
                 }
             }
         }
-
-        // self.select = None;
         self.select.0 = None;
         self.select.1 = '+';
         false
@@ -171,9 +168,6 @@ impl Game {
 }
 impl EventHandler for Game {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        // if  {
-        // 帅将x坐标<0,游戏结束
-        // }
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
@@ -194,6 +188,41 @@ impl EventHandler for Game {
             &self.at,
             (Vec2::new(self.m.x - 30., self.m.y - 30.), 0.0, Color::WHITE),
         )?;
+        // 当前玩家
+        let mut player_color = if self.player % 2 == 0 {
+            Color::RED
+        } else {
+            Color::BLACK
+        };
+        let zhanku = Font::new(ctx, "/zhanku.ttf")?; // 站酷字体
+        let word = Text::new(
+            TextFragment::new("当前\n玩家")
+                .font(zhanku)
+                .scale(PxScale::from(36.)),
+        );
+        graphics::draw(ctx, &word, (Vec2::new(630., 100.), player_color))?;
+        // 快捷键
+        let key_word = Text::new(
+            TextFragment::new("F1 :\n  读取存档\nF2 :\n  保存当前棋局")
+                .font(zhanku)
+                .scale(20.),
+        );
+        graphics::draw(
+            ctx,
+            &key_word,
+            (Vec2::new(600., 400.), Color::from_rgb(0x7a, 0x7a, 0x7a)),
+        )?;
+        // 游戏结束
+        let red = self.red.get(&0).unwrap();
+        let black = self.black.get(&0).unwrap();
+        if red.loc.x < 0. {
+            let win = Text::new(TextFragment::new("黑色胜利").font(zhanku).scale(28.));
+            graphics::draw(ctx, &win, (Vec2::new(600., 300.), Color::BLACK))?;
+        }
+        if black.loc.x < 0. {
+            let win = Text::new(TextFragment::new("红色胜利").font(zhanku).scale(28.));
+            graphics::draw(ctx, &win, (Vec2::new(600., 300.), Color::RED))?;
+        }
 
         graphics::present(ctx)?;
         Ok(())
@@ -208,19 +237,16 @@ impl EventHandler for Game {
     ) {
         let x = (_x + 30.) as i32 / 60;
         let y = (_y + 30.) as i32 / 60;
-        // println!("x:{}\ty:{}",x,y);
         // 防止选定框出界
         if x > 0 && x < 10 && y > 0 && y < 11 {
             self.m.x = x as f32 * 60.;
             self.m.y = y as f32 * 60.;
-            // println!("x:{}\ty:{}", self.m.x, self.m.y);
         }
         // 棋子移动
         match self.player % 2 {
             0 => {
                 if !self.state {
                     self.piece_find('r');
-                    // println!("{:?}", self.select);
                 } else {
                     self.piece_move();
                 }
@@ -229,7 +255,6 @@ impl EventHandler for Game {
             1 => {
                 if !self.state {
                     self.piece_find('b');
-                    // println!("{:?}", self.select);
                 } else {
                     self.piece_move();
                 }
