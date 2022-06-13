@@ -263,4 +263,17 @@ impl EventHandler for Game {
             _ => panic!("Player error!"),
         }
     }
+    fn key_down_event(
+            &mut self,
+            _ctx: &mut Context,
+            keycode: ggez::event::KeyCode,
+            _keymods: ggez::event::KeyMods,
+            _repeat: bool,
+        ) {
+        match keycode {
+            KeyCode::F1=>{println!("F1")},
+            KeyCode::F2=>{println!("F2")},
+            _=>{},
+        }
+    }
 }
