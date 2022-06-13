@@ -21,12 +21,28 @@ pub struct Game {
     pub select: (Option<u8>, char), // 当前选择(id,颜色)
     state: bool,                    //
     player: u16,                    // 当前玩家
+    player_color: Color,            // 当前玩家颜色
+    win: char,
+    word: (Text, Text, Text, Text), // 当前玩家，快捷键，red win，black win
 }
 
 impl Game {
     pub fn new(ctx: &mut Context) -> GameResult<Game> {
         let board = Image::new(ctx, "/board.png")?;
         let at = Image::new(ctx, "/at.png")?;
+        let zhanku = Font::new(ctx, "/zhanku.ttf")?; // 站酷字体
+        let cur = Text::new(
+            TextFragment::new("当前\n玩家")
+                .font(zhanku)
+                .scale(PxScale::from(36.)),
+        );
+        let key = Text::new(
+            TextFragment::new("F1 :\n  读取存档\nF2 :\n  保存当前棋局")
+                .font(zhanku)
+                .scale(20.),
+        );
+        let red_win = Text::new(TextFragment::new("红色胜利").font(zhanku).scale(28.));
+        let black_win = Text::new(TextFragment::new("黑色胜利").font(zhanku).scale(28.));
         let mut game = Game {
             board,
             at,
@@ -36,6 +52,9 @@ impl Game {
             state: false,
             m: Vec2::new(-60., -60.),
             player: 0,
+            player_color: Color::RED,
+            win: 'n',
+            word: (cur, key, red_win, black_win),
         };
         game.read_img('r', ctx);
         game.read_img('b', ctx);
@@ -108,9 +127,12 @@ impl Game {
                     v = self.which_piece(id);
                     // 移除黑棋
                     if self.update_loc(v, id) {
-                        for (_, p) in self.black.iter_mut() {
+                        for (id, p) in self.black.iter_mut() {
                             if p.loc.x + 24. == self.m.x && p.loc.y + 24. == self.m.y {
                                 p.loc = Vec2::new(-60., -60.);
+                                if *id == 0 {
+                                    self.win = 'r';
+                                }
                             }
                         }
                     }
@@ -128,9 +150,12 @@ impl Game {
                     // 移除红棋
                     if self.update_loc(v, id) {
                         println!("update");
-                        for (_, p) in self.red.iter_mut() {
+                        for (id, p) in self.red.iter_mut() {
                             if p.loc.x + 24. == self.m.x && p.loc.y + 24. == self.m.y {
                                 p.loc = Vec2::new(-60., -60.);
+                                if *id == 0 {
+                                    self.win = 'b';
+                                }
                             }
                         }
                     }
@@ -189,39 +214,27 @@ impl EventHandler for Game {
             (Vec2::new(self.m.x - 30., self.m.y - 30.), 0.0, Color::WHITE),
         )?;
         // 当前玩家
-        let mut player_color = if self.player % 2 == 0 {
+        self.player_color = if self.player % 2 == 0 {
             Color::RED
         } else {
             Color::BLACK
         };
-        let zhanku = Font::new(ctx, "/zhanku.ttf")?; // 站酷字体
-        let word = Text::new(
-            TextFragment::new("当前\n玩家")
-                .font(zhanku)
-                .scale(PxScale::from(36.)),
-        );
-        graphics::draw(ctx, &word, (Vec2::new(630., 100.), player_color))?;
-        // 快捷键
-        let key_word = Text::new(
-            TextFragment::new("F1 :\n  读取存档\nF2 :\n  保存当前棋局")
-                .font(zhanku)
-                .scale(20.),
-        );
         graphics::draw(
             ctx,
-            &key_word,
+            &self.word.0,
+            (Vec2::new(600., 100.), self.player_color),
+        )?;
+        // 快捷键
+        graphics::draw(
+            ctx,
+            &self.word.1,
             (Vec2::new(600., 400.), Color::from_rgb(0x7a, 0x7a, 0x7a)),
         )?;
         // 游戏结束
-        let red = self.red.get(&0).unwrap();
-        let black = self.black.get(&0).unwrap();
-        if red.loc.x < 0. {
-            let win = Text::new(TextFragment::new("黑色胜利").font(zhanku).scale(28.));
-            graphics::draw(ctx, &win, (Vec2::new(600., 300.), Color::BLACK))?;
-        }
-        if black.loc.x < 0. {
-            let win = Text::new(TextFragment::new("红色胜利").font(zhanku).scale(28.));
-            graphics::draw(ctx, &win, (Vec2::new(600., 300.), Color::RED))?;
+        match self.win {
+            'r' => graphics::draw(ctx, &self.word.2, (Vec2::new(600., 300.), Color::RED))?,
+            'b' => graphics::draw(ctx, &self.word.3, (Vec2::new(600., 300.), Color::BLACK))?,
+            _ => {}
         }
 
         graphics::present(ctx)?;
@@ -264,16 +277,20 @@ impl EventHandler for Game {
         }
     }
     fn key_down_event(
-            &mut self,
-            _ctx: &mut Context,
-            keycode: ggez::event::KeyCode,
-            _keymods: ggez::event::KeyMods,
-            _repeat: bool,
-        ) {
+        &mut self,
+        _ctx: &mut Context,
+        keycode: ggez::event::KeyCode,
+        _keymods: ggez::event::KeyMods,
+        _repeat: bool,
+    ) {
         match keycode {
-            KeyCode::F1=>{println!("F1")},
-            KeyCode::F2=>{println!("F2")},
-            _=>{},
+            KeyCode::F1 => {
+                println!("F1")
+            }
+            KeyCode::F2 => {
+                println!("F2")
+            }
+            _ => {}
         }
     }
 }
