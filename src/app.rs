@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Piece {
-    // id: u8,
     pub color: char,
     img: Image,
     pub loc: Vec2, // 当前坐标
@@ -111,7 +110,6 @@ impl Game {
     /// 移动棋子，并设置状态为false
     fn piece_move(&mut self) {
         if let Some(id) = self.select.0 {
-            println!("move id={id}");
             let v;
             // 吃掉对方棋子 && 同颜色禁止移动
             match self.select.1 {
@@ -149,7 +147,6 @@ impl Game {
                     v = self.which_piece(id);
                     // 移除红棋
                     if self.update_loc(v, id) {
-                        println!("update");
                         for (id, p) in self.red.iter_mut() {
                             if p.loc.x + 24. == self.m.x && p.loc.y + 24. == self.m.y {
                                 p.loc = Vec2::new(-60., -60.);
@@ -263,7 +260,6 @@ impl EventHandler for Game {
                 } else {
                     self.piece_move();
                 }
-                println!("{}", self.player);
             }
             1 => {
                 if !self.state {
@@ -271,7 +267,6 @@ impl EventHandler for Game {
                 } else {
                     self.piece_move();
                 }
-                println!("{}", self.player);
             }
             _ => panic!("Player error!"),
         }

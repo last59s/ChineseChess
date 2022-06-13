@@ -1,8 +1,9 @@
 use ggez::event::{self};
 use ggez::graphics;
 use std::{env, path};
-mod app;
 use app::Game;
+mod app;
+mod rule;
 
 fn main() {
     // 资源路径
@@ -15,7 +16,7 @@ fn main() {
     };
     // 设置默认窗口启动模式
     let win_mode = ggez::conf::WindowMode {
-        width: 700.,
+        width: 800.,
         height: 660.,
         ..Default::default()
     };
@@ -27,11 +28,10 @@ fn main() {
         .expect("System error!");
 
     graphics::set_window_title(&ctx, "Chinses Chess");
-    graphics::set_window_icon(&mut ctx, Some("/r10.png")).unwrap();
+    graphics::set_window_icon(&mut ctx,  Some("/r10.png")).unwrap();
     // 创建事件处理程序的实例。
     // 通常，您应该在设置游戏时为其提供上下文对象。
     let state = Game::new(&mut ctx).expect("Game error!");
 
-    // Run!
     event::run(ctx, event_loop, state);
 }
