@@ -274,7 +274,6 @@ impl Game {
             }
         }
         self.is_friend(&mut v);
-        println!("{:?}", v);
         v
     }
     pub fn shi(&self, id: u8) -> Vec<Vec2> {
