@@ -1,8 +1,9 @@
+use app::Game;
 use ggez::event::{self};
 use ggez::graphics;
 use std::{env, path};
-use app::Game;
 mod app;
+mod backup;
 mod rule;
 
 fn main() {
@@ -28,7 +29,7 @@ fn main() {
         .expect("System error!");
 
     graphics::set_window_title(&ctx, "Chinses Chess");
-    graphics::set_window_icon(&mut ctx,  Some("/r10.png")).unwrap();
+    graphics::set_window_icon(&mut ctx, Some("/r10.png")).unwrap();
     // 创建事件处理程序的实例。
     // 通常，您应该在设置游戏时为其提供上下文对象。
     let state = Game::new(&mut ctx).expect("Game error!");

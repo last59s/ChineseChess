@@ -1,3 +1,4 @@
+use crate::backup::Info;
 use ggez::event::{EventHandler, KeyCode};
 use ggez::graphics::{self, Color, Font, Image, PxScale, Text, TextFragment};
 use ggez::{Context, GameResult};
@@ -8,7 +9,7 @@ use std::collections::HashMap;
 pub struct Piece {
     pub color: char,
     img: Image,
-    pub loc: Vec2, // 当前坐标
+    pub loc: Vec2, // 当前坐标 m-24.
 }
 #[derive(Clone)]
 pub struct Game {
@@ -18,10 +19,10 @@ pub struct Game {
     pub black: HashMap<u8, Piece>,
     m: Vec2,                        // 鼠标坐标
     pub select: (Option<u8>, char), // 当前选择(id,颜色)
-    state: bool,                    //
-    player: u16,                    // 当前玩家
-    player_color: Color,            // 当前玩家颜色
-    win: char,
+    pub state: bool,                // 状态值
+    pub player: u16,                // 当前玩家
+    pub player_color: Color,        // 当前玩家颜色
+    pub win: char,
     word: (Text, Text, Text, Text), // 当前玩家，快捷键，red win，black win
 }
 
@@ -35,8 +36,8 @@ impl Game {
                 .font(zhanku)
                 .scale(PxScale::from(36.)),
         );
-        let key = Text::new(
-            TextFragment::new("F1 :\n  读取存档\nF2 :\n  保存当前棋局")
+        let info = Text::new(
+            TextFragment::new("F1 : 存档\nF2 : 读档")
                 .font(zhanku)
                 .scale(20.),
         );
@@ -53,7 +54,7 @@ impl Game {
             player: 0,
             player_color: Color::RED,
             win: 'n',
-            word: (cur, key, red_win, black_win),
+            word: (cur, info, red_win, black_win),
         };
         game.read_img('r', ctx);
         game.read_img('b', ctx);
@@ -280,10 +281,26 @@ impl EventHandler for Game {
     ) {
         match keycode {
             KeyCode::F1 => {
-                println!("F1")
+                println!("存档");
+                let _ = Info::new(self.clone()).save();
             }
             KeyCode::F2 => {
-                println!("F2")
+                println!("读档");
+                if let Some(info) = Info::read() {
+                    for i in 0..=15 {
+                        let r=info.red.get(&i).unwrap();
+                        let b=info.black.get(&i).unwrap();
+                        let _r=Vec2::new(r.0, r.1);
+                        let _b=Vec2::new(b.0, b.1);
+                        self.red.get_mut(&i).unwrap().loc=_r;
+                        self.black.get_mut(&i).unwrap().loc=_b;
+                    }
+                    self.state=info.state;
+                    self.player=info.player;
+                    self.player_color=info.player_color;
+                    self.win=info.win;
+
+                }
             }
             _ => {}
         }
